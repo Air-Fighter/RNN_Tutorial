@@ -43,10 +43,12 @@ def build_model_for_predication(
     predictor = theano.function(inputs=[x],
                                 outputs=classifier.output_layer.y_pred)
 
-    print '...printing calculate results'
+    print '...printing calculate results to %s' % out_file
 
+    f = open(out_file, 'w')
     for index in xrange(len(test_set_y)):
-        print predictor(test_set_x[index])[0]
+        print >> f, predictor(test_set_x[index])[0]
+    f.close()
 
 if __name__ == '__main__':
     build_model_for_predication()

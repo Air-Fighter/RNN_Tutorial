@@ -5,3 +5,4 @@
 dist
 build
 .idea
+data/model_output.txt

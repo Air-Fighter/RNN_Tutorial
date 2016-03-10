@@ -1,6 +1,7 @@
 import theano
 import theano.tensor as T
-from utils import *
+import numpy as np
+
 import operator
 
 class RNN_matrix:
