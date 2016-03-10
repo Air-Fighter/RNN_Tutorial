@@ -2,7 +2,7 @@ import theano
 import theano.tensor as T
 
 from LoadData_wordvec import load_data
-from rnn_matrix import RNN_matrix
+from RNN_matrix import RNN_matrix
 
 X_train, Y_train = load_data(embedding_file='data/RNN_dict.txt',
                                     input_file='data/RNNinput.txt')

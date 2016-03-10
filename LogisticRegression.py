@@ -3,19 +3,8 @@ import theano.tensor as T
 import numpy as np
 
 class LogisticRegression(object):
-    """
-    This class implements a basic classifier -- logistic regression.
-    """
 
     def __init__(self, input, n_in, n_out):
-        """
-        :type input: theano.tensor.TensorType
-        :param input: symbolic variable
-        :type n_in: int
-        :param n_in: number of input units, the dimension of the space
-        :type n_out: int
-        :param n_out: number of output units, the dimension of the space
-        """
 
         # initialize with 0 the weights W as a matrix of shape(n_in, n_out)
         self.W = theano.shared(
@@ -52,9 +41,6 @@ class LogisticRegression(object):
         :type y: theano.tensor.TensorType
         :param y: corresponds to a vector that gives for each example the correct label
         :return: the mean of the negative log-likelihood of the prediction of this modal
-        .. math::
-                \frac{1}{|\mathcal{D}|} \mathcal{L} (\theta=\{W,b\}, \mathcal{D}) =
-                \frac{1}{|\mathcal{D}|} \sum_{i=0}^{|\mathcal{D}|} \log(P(Y=y^{(i)}|x^{(i)}, W,\ell (\theta=\{W,b\}, \mathcal{D})
         """
         return -T.mean(T.log(self.p_y_given_x)[T.arange(y.shape[0]), y])
 

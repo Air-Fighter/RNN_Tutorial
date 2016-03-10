@@ -7,7 +7,7 @@ import theano.tensor as T
 import numpy as np
 
 from LoadData_xy import load_data_xy
-from MLP_rnn import MLP
+from MLP_RNN import MLP
 
 
 def sgd_MLP(learning_rate=0.01,
@@ -30,12 +30,14 @@ def sgd_MLP(learning_rate=0.01,
     x = T.matrix('x', dtype=theano.config.floatX)
     y = T.vector('y', dtype='int64')
 
-    classifier = MLP(input=x,
+    rng = np.random.RandomState(1234)
+    classifier = MLP(rng = rng,
+                     input=x,
                      n_in=100,
                      n_hidden=n_hidden,
                      n_out=2)
 
-    cost = classifier.loss_function(y) # + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr
+    cost = classifier.loss_function(y) + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr
 
     test_model = theano.function(inputs=[x, y], outputs=classifier.errors(y))
 
@@ -91,7 +93,7 @@ def sgd_MLP(learning_rate=0.01,
                     patience = max(patience, epoch * patience_increase)
 
                 best_valid_loss = this_valid_loss
-                best_iter = epoch
+                best_params = classifier.params
 
                 test_losses = [test_model(test_set_x[i], [test_set_y[i]]) for i in xrange(len(test_set_y))]
                 test_score = np.mean(test_losses)

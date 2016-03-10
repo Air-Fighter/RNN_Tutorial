@@ -5,21 +5,35 @@ import operator
 
 class RNN_matrix:
 
-    def __init__(self, input, word_dim, hidden_dim=100, bptt_truncate=4):
+    def __init__(self, rng, input, word_dim, hidden_dim=100, bptt_truncate=4):
+
         # Assign instance variables
-        # U_ = np.random.uniform(-np.sqrt(1./word_dim), np.sqrt(1./word_dim), (hidden_dim, word_dim))
-        V_ = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (word_dim, hidden_dim))
-        W_ = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (hidden_dim, hidden_dim))
         self.U = theano.shared(
-            value=np.random.uniform(
+            value=rng.uniform(
                 low=-np.sqrt(1./word_dim),
                 high=np.sqrt(1./word_dim),
                 size=(hidden_dim, word_dim)
-                ).astype(theano.config.floatX),
+            ).astype(theano.config.floatX),
             name='U'
-            )
-        self.V = theano.shared(value=V_.astype(theano.config.floatX), name='V')
-        self.W = theano.shared(value=W_.astype(theano.config.floatX), name='W')
+        )
+
+        self.V = theano.shared(
+            value=rng.uniform(
+                low=-np.sqrt(1./hidden_dim),
+                high=np.sqrt(1./hidden_dim),
+                size=(word_dim, hidden_dim)
+            ).astype(theano.config.floatX),
+            name='V'
+        )
+
+        self.W = theano.shared(
+            value=rng.uniform(
+                low=-np.sqrt(1./hidden_dim),
+                high=np.sqrt(1./hidden_dim),
+                size=(hidden_dim, hidden_dim)
+            ).astype(theano.config.floatX),
+            name='W'
+        )
 
         self.params = [self.U, self.V, self.W]
 
@@ -45,6 +59,7 @@ class RNN_matrix:
         return abs(T.sum(T.nnet.categorical_crossentropy(coding_dist=self.output_sequence, true_dist=Y)))
     """
 
+# the following is useless
 def gradient_check_theano(model, x, y, h=0.001, error_threshold=0.01):
     # Overwrite the bptt attribute. We need to backpropagate all the way to get the correct gradient
     model.bptt_truncate = 1000

@@ -1,13 +1,10 @@
-import theano
-import theano.tensor as T
-import numpy as np
-
-from rnn_matrix import RNN_matrix
+from RNN_matrix import RNN_matrix
 from LogisticRegression import LogisticRegression
 
 class MLP(object):
-    def __init__(self, input, n_in, n_hidden, n_out):
+    def __init__(self, rng, input, n_in, n_hidden, n_out):
         self.hidden_layer = RNN_matrix(
+            rng=rng,
             input=input,
             word_dim=n_in,
             hidden_dim=n_hidden
