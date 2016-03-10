@@ -7,10 +7,17 @@ class RNN_matrix:
 
     def __init__(self, input, word_dim, hidden_dim=100, bptt_truncate=4):
         # Assign instance variables
-        U_ = np.random.uniform(-np.sqrt(1./word_dim), np.sqrt(1./word_dim), (hidden_dim, word_dim))
+        # U_ = np.random.uniform(-np.sqrt(1./word_dim), np.sqrt(1./word_dim), (hidden_dim, word_dim))
         V_ = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (word_dim, hidden_dim))
         W_ = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (hidden_dim, hidden_dim))
-        self.U = theano.shared(value=U_.astype(theano.config.floatX), name='U',)
+        self.U = theano.shared(
+            value=np.random.uniform(
+                low=-np.sqrt(1./word_dim),
+                high=np.sqrt(1./word_dim),
+                size=(hidden_dim, word_dim)
+                ).astype(theano.config.floatX),
+            name='U'
+            )
         self.V = theano.shared(value=V_.astype(theano.config.floatX), name='V')
         self.W = theano.shared(value=W_.astype(theano.config.floatX), name='W')
 
@@ -21,7 +28,7 @@ class RNN_matrix:
             o_t = T.nnet.softmax(T.dot(V, s_t))
             return o_t[0], s_t
 
-        [o,s], updates = theano.scan(
+        [o, _], updates = theano.scan(
             fn=one_step,
             sequences=[input],
             outputs_info=[None, dict(initial=T.zeros(hidden_dim), dtype=theano.config.floatX)],

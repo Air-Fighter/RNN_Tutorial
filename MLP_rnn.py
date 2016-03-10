@@ -3,7 +3,6 @@ import theano.tensor as T
 import numpy as np
 
 from rnn_matrix import RNN_matrix
-from HiddenLayer import HiddenLayer
 from LogisticRegression import LogisticRegression
 
 class MLP(object):
