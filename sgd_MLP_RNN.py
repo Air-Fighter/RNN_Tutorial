@@ -1,6 +1,7 @@
 import time
 import sys
 import os
+import cPickle
 
 import theano
 import theano.tensor as T
@@ -9,11 +10,10 @@ import numpy as np
 from LoadData_xy import load_data_xy
 from MLP_RNN import MLP
 
-
 def sgd_MLP(learning_rate=0.01,
             L1_reg=0.00,
             L2_reg=0.0001,
-            max_epoches=10000,
+            max_epoches=1000,
             dataset='data/RNNinput.txt',
             n_hidden=400):
 
@@ -57,11 +57,11 @@ def sgd_MLP(learning_rate=0.01,
 
     print "...training model"
 
-    patience = 1000000
+    patience = 10000
     patience_increase = 2
     improvement_threshold = 0.995
 
-    valid_freq = 10
+    valid_freq = 1
 
     best_params = None
     best_valid_loss = np.inf
@@ -93,7 +93,10 @@ def sgd_MLP(learning_rate=0.01,
                     patience = max(patience, epoch * patience_increase)
 
                 best_valid_loss = this_valid_loss
-                best_params = classifier.params
+
+                file = open('data/best_params.txt', 'wb')
+                cPickle.dump(classifier.params, file)
+                file.close()
 
                 test_losses = [test_model(test_set_x[i], [test_set_y[i]]) for i in xrange(len(test_set_y))]
                 test_score = np.mean(test_losses)
