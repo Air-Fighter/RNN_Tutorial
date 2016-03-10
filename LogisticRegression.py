@@ -4,23 +4,25 @@ import numpy as np
 
 class LogisticRegression(object):
 
-    def __init__(self, input, n_in, n_out):
+    def __init__(self, rng, input, n_in, n_out):
 
         # initialize with 0 the weights W as a matrix of shape(n_in, n_out)
         self.W = theano.shared(
-            value=np.zeros(
-                (n_in, n_out),
-                dtype = theano.config.floatX
-            ),
+            value=rng.uniform(
+                low=-np.sqrt(1. / (n_in+n_out)),
+                high=np.sqrt(1. / (n_in+n_out)),
+                size=(n_in, n_out)
+            ).astype(theano.config.floatX),
             name = 'W',
             borrow = True
         )
         # initialize the baises b as a vector of n_out 0s
         self.b = theano.shared(
-            value = np.zeros(
-                (n_out, ),
-                dtype = theano.config.floatX
-            ),
+            value = rng.uniform(
+                low=-np.sqrt(1. / (n_in+n_out)),
+                high=np.sqrt(1. / (n_in+n_out)),
+                size=(n_out, )
+            ).astype(theano.config.floatX),
             name = 'b',
             borrow = True
         )

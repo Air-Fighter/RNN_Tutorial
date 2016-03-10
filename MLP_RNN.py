@@ -11,6 +11,7 @@ class MLP(object):
         )
 
         self.output_layer = LogisticRegression(
+            rng=rng,
             input=self.hidden_layer.output,
             n_in=n_in,
             n_out=n_out
