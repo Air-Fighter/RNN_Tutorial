@@ -36,8 +36,6 @@ class LogisticRegression(object):
         # parameters of modal
         self.params = [self.W, self.b]
 
-        self.log_given = T.log(self.p_y_given_x)
-
     def loss_function(self, y):
         """
         :type y: theano.tensor.TensorType
@@ -64,6 +62,6 @@ class LogisticRegression(object):
 
         # check y's datatype
         if y.dtype.startswith('int'):
-            return T.mean(T.neq(self.y_pred, y))
+            return T.neq(self.y_pred, y)
         else:
             raise NotImplementedError()

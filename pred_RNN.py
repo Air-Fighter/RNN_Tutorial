@@ -8,7 +8,7 @@ from LoadData_xy import load_data_xy
 
 def build_model_for_predication(
         data_set='data/RNNinput.txt',
-        out_file='data/model_output.txt',
+        out_file='data/model_pred/model_output.txt',
         n_hidden=400):
     print '...loading data'
     datasets = load_data_xy()
@@ -19,7 +19,7 @@ def build_model_for_predication(
 
     print '...loading parameters'
 
-    f= open('data/best_params.txt', 'rb')
+    f= open('data/params/epoch50_params.txt', 'rb')
     best_params = cPickle.load(f)
     f.close()
 
@@ -33,21 +33,19 @@ def build_model_for_predication(
                      n_in=100,
                      n_hidden=n_hidden,
                      n_out=2)
+    predictor = theano.function(inputs=[x],  outputs=classifier.output_layer.y_pred)
 
-    classifier.hidden_layer.U = best_params[0]
-    classifier.hidden_layer.V = best_params[1]
-    classifier.hidden_layer.W = best_params[2]
-    classifier.output_layer.W = best_params[3]
-    classifier.output_layer.b = best_params[4]
-
-    predictor = theano.function(inputs=[x],
-                                outputs=classifier.output_layer.y_pred)
+    classifier.hidden_layer.U.set_value(best_params[0])
+    classifier.hidden_layer.V.set_value(best_params[1])
+    classifier.hidden_layer.W.set_value(best_params[2])
+    classifier.output_layer.W.set_value(best_params[3])
+    classifier.output_layer.b.set_value(best_params[4])
 
     print '...printing calculate results to %s' % out_file
 
     f = open(out_file, 'w')
     for index in xrange(len(test_set_y)):
-        print >> f, predictor(test_set_x[index])[0]
+        print >> f, predictor(test_set_x[index])[0], test_set_y[index]
     f.close()
 
 if __name__ == '__main__':

@@ -30,7 +30,7 @@ def sgd_MLP(learning_rate=0.01,
     x = T.matrix('x', dtype=theano.config.floatX)
     y = T.vector('y', dtype='int64')
 
-    rng = np.random.RandomState(1234)
+    rng = np.random.RandomState(12)
     classifier = MLP(rng = rng,
                      input=x,
                      n_in=100,
@@ -43,8 +43,11 @@ def sgd_MLP(learning_rate=0.01,
 
     valid_model = theano.function(inputs=[x, y], outputs=classifier.errors(y))
 
-    gparams = [T.grad(cost, param) for param in classifier.params]
+    y_pred_model = theano.function(inputs=[x], outputs=classifier.output_layer.y_pred)
 
+    p_y_given_x_model = theano.function(inputs=[x], outputs=classifier.output_layer.p_y_given_x)
+
+    gparams = [T.grad(cost, param) for param in classifier.params]
 
     updates = [(param, param - learning_rate * gparam)
                for param, gparam in zip(classifier.params, gparams)]
@@ -55,16 +58,18 @@ def sgd_MLP(learning_rate=0.01,
         updates=updates
     )
 
+
+
     print "...training model"
 
     patience = 10000
     patience_increase = 2
     improvement_threshold = 0.995
 
-    valid_freq = 1
+    valid_freq = 5
 
     best_params = None
-    best_valid_loss = np.inf
+    best_valid_error = np.inf
     best_iter = 0
     test_score = 0.
     start_time = time.clock()
@@ -76,26 +81,37 @@ def sgd_MLP(learning_rate=0.01,
         epoch += 1
 
         total_cost = 0.
+
+        f = open('data/train/epoch_' + str(epoch) + '.txt', 'wb')
         for index in xrange(len(train_set_y)):
             this_cost = train_model(train_set_x[index], [train_set_y[index]])
+            print >> f, p_y_given_x_model(train_set_x[index]), y_pred_model(train_set_x[index]), \
+                train_set_y[index], this_cost
             total_cost += this_cost
             print "\repoch", epoch, " index:", index," y:", train_set_y[index], " cost:", this_cost,
         print " total loss:", total_cost
+        f.close()
 
         if epoch % valid_freq == 0:
-            valid_losses = [valid_model(valid_set_x[i], [valid_set_y[i]]) for i in xrange(len(valid_set_y))]
-            this_valid_loss = np.mean(valid_losses)
+            valid_errors = [valid_model(valid_set_x[i], [valid_set_y[i]]) for i in xrange(len(valid_set_y))]
 
-            print '\tepoch', epoch, ' validation error:', this_valid_loss * 100.
+            f = open('data/valid/epoch_' + str(epoch) + '.txt', 'wb')
+            for i in xrange(len(valid_set_y)):
+                print >> f, p_y_given_x_model(valid_set_x[i]), y_pred_model(valid_set_x[i]), ' ', valid_set_y[i]
+            f.close()
 
-            if this_valid_loss < best_valid_loss:
-                if this_valid_loss < best_valid_loss * improvement_threshold :
+            this_valid_error = np.mean(valid_errors)
+
+            print '\tepoch', epoch, ' validation error:', this_valid_error * 100.
+
+            if this_valid_error < best_valid_error:
+                if this_valid_error < best_valid_error * improvement_threshold :
                     patience = max(patience, epoch * patience_increase)
 
-                best_valid_loss = this_valid_loss
+                best_valid_error = this_valid_error
 
-                file = open('data/best_params.txt', 'wb')
-                cPickle.dump(classifier.params, file)
+                file = open('data/params/epoch_' + str(epoch) + '.txt', 'wb')
+                cPickle.dump([param.get_value() for param in classifier.params], file)
                 file.close()
 
                 test_losses = [test_model(test_set_x[i], [test_set_y[i]]) for i in xrange(len(test_set_y))]
@@ -110,7 +126,7 @@ def sgd_MLP(learning_rate=0.01,
 
     end_time = time.clock()
     print 'Optimization comlete with best validation score of %f %%, with test performance %f %%' %\
-            (best_valid_loss * 100., test_score * 100.)
+            (best_valid_error * 100., test_score * 100.)
     print 'The code run for %d epochs, with %f epochs/sec' % (epoch, 1. * epoch / (end_time - start_time))
     print >> sys.stderr, ('The ' + os.path.split(__file__)[1] +
                           ' ran for %.lfs' % ((end_time - start_time)))

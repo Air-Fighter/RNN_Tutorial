@@ -6,3 +6,7 @@ dist
 build
 .idea
 data/model_output.txt
+data/params
+data/train
+data/valid
+data/model_pred
