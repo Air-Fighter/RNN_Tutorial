@@ -49,6 +49,52 @@ def load_data(embedding_file='data/RNN_dict.txt',
 
     return x_list, y_list
 
+def load_data_x(x_file='data/test_1/RNNwords.txt',
+                embedding_file = 'data/RNN_dict.txt'):
+    x, x_ = load_data(input_file=x_file, embedding_file=embedding_file)
+
+    return x
+
+def load_data_y(y_file='data/RNNlabels.txt'):
+    ret_y = []
+    for line in open(y_file):
+        line = line.strip()
+        ret_y.append(int(line))
+
+    return ret_y
+
+def load_data_xy(x_file='data/RNNinput.txt',
+              y_file='data/MLPLabels.txt'):
+    x, x_ = load_data(input_file=x_file)
+    Y_file = open(y_file, mode='r')
+    y_ = []
+
+    for line in Y_file:
+        line = line[:-1]
+        line = line.strip()
+        y_.append(int(line))
+
+    y = np.asarray(y_, dtype='int8')
+
+    datasets = []
+    datasets.append([x[:10362], y[:10362]])
+    datasets.append([x[10362:11362], y[10362:11362]])
+    datasets.append([x[11362:], y[11362:]])
+
+    def shared_dataset(data_xy, borrow=True):
+        data_x, data_y = data_xy
+        shared_x = theano.shared(value=data_x)
+        shared_y = theano.shared(value=data_y)
+        return shared_x, shared_y
+
+    rval = []
+    rval.append(shared_dataset(datasets[0]))
+    rval.append(shared_dataset(datasets[1]))
+    rval.append(shared_dataset(datasets[2]))
+
+    return datasets
+
+
 if __name__ == '__main__':
     x_set, y_set = load_data(input_file='data/RNNinput.txt')
     print x_set.shape, y_set.shape

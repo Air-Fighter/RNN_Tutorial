@@ -10,3 +10,4 @@ data/params
 data/train
 data/valid
 data/model_pred
+data/test*
