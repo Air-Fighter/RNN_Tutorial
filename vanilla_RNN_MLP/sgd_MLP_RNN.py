@@ -7,6 +7,8 @@ import theano
 import theano.tensor as T
 import numpy as np
 
+sys.path.append('.')
+
 from LoadData import load_data_xy
 from MLP_RNN import MLP
 
@@ -18,8 +20,8 @@ def sgd_MLP(learning_rate=0.01,
             n_hidden=400):
 
     print '...reading data'
-    datasets = load_data_xy(x_file='../data/RNNinput.txt', y_file='../data/MLPLabels.txt',
-                            embedding_file='../data/RNN_dict.txt')
+    datasets = load_data_xy(x_file='data/RNNinput.txt', y_file='data/MLPLabels.txt',
+                            embedding_file='data/RNN_dict.txt')
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
@@ -107,7 +109,7 @@ def sgd_MLP(learning_rate=0.01,
 
                 best_valid_error = this_valid_error
 
-                file = open('data/params/epoch_' + str(epoch) + '.txt', 'wb')
+                file = open('data/rnn_params/epoch_' + str(epoch) + '.txt', 'wb')
                 cPickle.dump([param.get_value() for param in classifier.params], file)
                 file.close()
 
