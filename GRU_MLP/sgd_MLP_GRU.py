@@ -8,12 +8,12 @@ import theano.tensor as T
 import numpy as np
 
 from LoadData import load_data_xy
-from MLP_RNN import MLP
+from MLP_GRU import MLP
 
 def sgd_MLP(learning_rate=0.01,
             L1_reg=0.00,
             L2_reg=0.0001,
-            max_epoches=1000,
+            max_epoches=2000,
             dataset='data/RNNinput.txt',
             n_hidden=400):
 
@@ -92,7 +92,7 @@ def sgd_MLP(learning_rate=0.01,
         if epoch % valid_freq == 0:
             valid_errors = [valid_model(valid_set_x[i], [valid_set_y[i]]) for i in xrange(len(valid_set_y))]
 
-            f = open('data/valid/epoch_' + str(epoch) + '.txt', 'wb')
+            f = open('data/gru_valid/epoch_' + str(epoch) + '.txt', 'wb')
             for i in xrange(len(valid_set_y)):
                 print >> f, p_y_given_x_model(valid_set_x[i]), y_pred_model(valid_set_x[i]), ' ', valid_set_y[i]
             f.close()
@@ -107,7 +107,7 @@ def sgd_MLP(learning_rate=0.01,
 
                 best_valid_error = this_valid_error
 
-                file = open('data/params/epoch_' + str(epoch) + '.txt', 'wb')
+                file = open('data/gru_params/epoch_' + str(epoch) + '.txt', 'wb')
                 cPickle.dump([param.get_value() for param in classifier.params], file)
                 file.close()
 

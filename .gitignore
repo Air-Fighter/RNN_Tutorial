@@ -11,3 +11,5 @@ data/train
 data/valid
 data/model_pred
 data/test*
+data/gru*
+data/rnn*

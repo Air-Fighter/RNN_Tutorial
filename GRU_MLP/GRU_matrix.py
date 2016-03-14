@@ -13,7 +13,7 @@ class GRU_matrix:
             value=rng.uniform(
                 low=-np.sqrt(1./word_dim),
                 high=np.sqrt(1./word_dim),
-                size=(hidden_dim, word_dim)
+                size=(3, hidden_dim, word_dim)
             ).astype(theano.config.floatX),
             name='U'
         )
@@ -31,7 +31,7 @@ class GRU_matrix:
             value=rng.uniform(
                 low=-np.sqrt(1./hidden_dim),
                 high=np.sqrt(1./hidden_dim),
-                size=(hidden_dim, hidden_dim)
+                size=(3, hidden_dim, hidden_dim)
             ).astype(theano.config.floatX),
             name='W'
         )
@@ -39,7 +39,10 @@ class GRU_matrix:
         self.params = [self.U, self.V, self.W]
 
         def one_step(x_t, s_t_prev, U, V, W):
-            s_t = T.tanh(T.dot(U, x_t) + T.dot(W, s_t_prev))
+            z = T.nnet.hard_sigmoid(T.dot(U[0], x_t) + T.dot(s_t_prev, W[0]))
+            r = T.nnet.hard_sigmoid(T.dot(U[1], x_t) + T.dot(s_t_prev, W[1]))
+            h = T.tanh(T.dot(U[2], x_t) + T.dot((s_t_prev * r), W[2]))
+            s_t = (T.ones_like(z) - z) * h + z * s_t_prev
             o_t = T.nnet.softmax(T.dot(V, s_t))
             return o_t[0], s_t
 
