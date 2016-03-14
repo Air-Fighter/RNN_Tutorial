@@ -50,7 +50,7 @@ def load_data(embedding_file='data/RNN_dict.txt',
     return x_list, y_list
 
 def load_data_x(x_file='data/test_1/RNNwords.txt',
-                embedding_file = 'data/RNN_dict.txt'):
+                embedding_file='data/RNN_dict.txt'):
     x, x_ = load_data(input_file=x_file, embedding_file=embedding_file)
 
     return x
@@ -64,8 +64,9 @@ def load_data_y(y_file='data/RNNlabels.txt'):
     return ret_y
 
 def load_data_xy(x_file='data/RNNinput.txt',
-              y_file='data/MLPLabels.txt'):
-    x, x_ = load_data(input_file=x_file)
+              y_file='data/MLPLabels.txt',
+              embedding_file='data/RNN_dict.txt'):
+    x, x_ = load_data(input_file=x_file, embedding_file=embedding_file)
     Y_file = open(y_file, mode='r')
     y_ = []
 

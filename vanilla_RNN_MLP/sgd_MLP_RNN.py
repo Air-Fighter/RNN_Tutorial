@@ -18,7 +18,8 @@ def sgd_MLP(learning_rate=0.01,
             n_hidden=400):
 
     print '...reading data'
-    datasets = load_data_xy()
+    datasets = load_data_xy(x_file='../data/RNNinput.txt', y_file='../data/MLPLabels.txt',
+                            embedding_file='../data/RNN_dict.txt')
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
