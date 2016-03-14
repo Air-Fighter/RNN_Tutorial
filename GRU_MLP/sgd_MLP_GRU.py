@@ -40,7 +40,7 @@ def sgd_MLP(learning_rate=0.01,
                      n_hidden=n_hidden,
                      n_out=2)
 
-    cost = classifier.loss_function(y) + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr
+    cost = classifier.loss_function(y) # + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr
 
     test_model = theano.function(inputs=[x, y], outputs=classifier.errors(y))
 

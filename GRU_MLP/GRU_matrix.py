@@ -10,7 +10,7 @@ class GRU_matrix:
 
         # Assign instance variables
         self.U = theano.shared(
-            value=rng.uniform(
+            value=np.random.uniform(
                 low=-np.sqrt(1./word_dim),
                 high=np.sqrt(1./word_dim),
                 size=(3, hidden_dim, word_dim)
@@ -19,7 +19,7 @@ class GRU_matrix:
         )
 
         self.V = theano.shared(
-            value=rng.uniform(
+            value=np.random.uniform(
                 low=-np.sqrt(1./hidden_dim),
                 high=np.sqrt(1./hidden_dim),
                 size=(word_dim, hidden_dim)
@@ -28,7 +28,7 @@ class GRU_matrix:
         )
 
         self.W = theano.shared(
-            value=rng.uniform(
+            value=np.random.uniform(
                 low=-np.sqrt(1./hidden_dim),
                 high=np.sqrt(1./hidden_dim),
                 size=(3, hidden_dim, hidden_dim)
