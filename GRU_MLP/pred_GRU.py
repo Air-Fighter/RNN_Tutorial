@@ -9,21 +9,21 @@ sys.path.append('.')
 
 from LoadData import load_data_x
 from LoadData import load_data_y
-from MLP_RNN import MLP
+from MLP_GRU import MLP
 
 
 def build_model_for_predication(
         data_set='data/RNNinput.txt',
-        out_file='data/test_4/output_pred.txt',
+        out_file='data/gru_test/test_1/output.txt',
         n_hidden=400):
     print '...loading data'
 
-    x_set = load_data_x('data/test_3/words.txt', 'data/test_3/dict.txt')
-    y_set = load_data_y('data/test_3/labels.txt')
+    x_set = load_data_x('data/gru_test/test_1/words.txt', 'data/gru_test/test_1/dict.txt')
+    y_set = load_data_y('data/gru_test/test_1/labels.txt')
 
     print '...loading parameters'
 
-    f= open('data/params/epoch_435.txt', 'rb')
+    f= open('data/gru_params/epoch_220.txt', 'rb')
     best_params = cPickle.load(f)
     f.close()
 

@@ -1,11 +1,11 @@
-import time
-import sys
-import os
 import cPickle
+import os
+import sys
+import time
 
+import numpy as np
 import theano
 import theano.tensor as T
-import numpy as np
 
 sys.path.append('.')
 

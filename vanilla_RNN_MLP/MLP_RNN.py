@@ -1,5 +1,6 @@
-from RNN_matrix import RNN_matrix
 from LogisticRegression import LogisticRegression
+from RNN_matrix import RNN_matrix
+
 
 class MLP(object):
     def __init__(self, rng, input, n_in, n_hidden, n_out):
