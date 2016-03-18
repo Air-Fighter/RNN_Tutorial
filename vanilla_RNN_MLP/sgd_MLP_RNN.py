@@ -2,6 +2,7 @@ import cPickle
 import os
 import sys
 import time
+import argparse
 
 import numpy as np
 import theano
@@ -12,7 +13,9 @@ sys.path.append('.')
 from LoadData import load_data_xy
 from MLP_RNN import MLP
 
-def sgd_MLP(learning_rate=0.01,
+def sgd_MLP(
+            param_file=None,
+            learning_rate=0.01,
             L1_reg=0.00,
             L2_reg=0.0001,
             max_epoches=1000,
@@ -20,8 +23,9 @@ def sgd_MLP(learning_rate=0.01,
             n_hidden=400):
 
     print '...reading data'
-    datasets = load_data_xy(x_file='data/RNNinput.txt', y_file='data/MLPLabels.txt',
-                            embedding_file='data/RNN_dict.txt')
+    datasets = load_data_xy(x_file='data/train/words.txt', y_file='data/train/labels.txt',
+                            embedding_file='data/train/dict_03171041.txt')
+
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
@@ -40,7 +44,21 @@ def sgd_MLP(learning_rate=0.01,
                      n_hidden=n_hidden,
                      n_out=2)
 
-    cost = classifier.loss_function(y) + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr
+    if not param_file is None:
+        print '\n...rebuilding the model from the former parameters:' + param_file + '\n'
+        f= open(param_file, 'rb')
+        pre_params = cPickle.load(f)
+        f.close()
+        classifier.hidden_layer.U.set_value(pre_params[0])
+        classifier.hidden_layer.V.set_value(pre_params[1])
+        classifier.hidden_layer.W.set_value(pre_params[2])
+        classifier.output_layer.W.set_value(pre_params[3])
+        classifier.output_layer.b.set_value(pre_params[4])
+
+    if not learning_rate is float:
+        learning_rate = float(learning_rate)
+
+    cost = classifier.loss_function(y) # + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr
 
     test_model = theano.function(inputs=[x, y], outputs=classifier.errors(y))
 
@@ -94,7 +112,7 @@ def sgd_MLP(learning_rate=0.01,
         if epoch % valid_freq == 0:
             valid_errors = [valid_model(valid_set_x[i], [valid_set_y[i]]) for i in xrange(len(valid_set_y))]
 
-            f = open('data/valid/epoch_' + str(epoch) + '.txt', 'wb')
+            f = open('data/rnn_valid/epoch_' + str(epoch) + '.txt', 'wb')
             for i in xrange(len(valid_set_y)):
                 print >> f, p_y_given_x_model(valid_set_x[i]), y_pred_model(valid_set_x[i]), ' ', valid_set_y[i]
             f.close()
@@ -124,7 +142,7 @@ def sgd_MLP(learning_rate=0.01,
             break
 
     end_time = time.clock()
-    print 'Optimization comlete with best validation score of %f %%, with test performance %f %%' %\
+    print 'Optimization complete with best validation score of %f %%, with test performance %f %%' %\
             (best_valid_error * 100., test_score * 100.)
     print 'The code run for %d epochs, with %f epochs/sec' % (epoch, 1. * epoch / (end_time - start_time))
     print >> sys.stderr, ('The ' + os.path.split(__file__)[1] +
@@ -132,4 +150,12 @@ def sgd_MLP(learning_rate=0.01,
 
 
 if __name__ == '__main__':
-    sgd_MLP()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '-params', help='the path\\filename of an existing parameter file')
+    parser.add_argument('-l', '-learning_rate', help='learning rate of training the model')
+    args = parser.parse_args()
+
+    if not args:
+        sgd_MLP()
+    else:
+        sgd_MLP(param_file=args.p, learning_rate=args.l)

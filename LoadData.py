@@ -70,17 +70,17 @@ def load_data_xy(x_file='data/RNNinput.txt',
     Y_file = open(y_file, mode='r')
     y_ = []
 
+    line_num = 0
     for line in Y_file:
-        line = line[:-1]
         line = line.strip()
         y_.append(int(line))
 
     y = np.asarray(y_, dtype='int8')
 
     datasets = []
-    datasets.append([x[:10362], y[:10362]])
-    datasets.append([x[10362:11362], y[10362:11362]])
-    datasets.append([x[11362:], y[11362:]])
+    datasets.append([x[4000:], y[4000:]])
+    datasets.append([x[2000:4000], y[2000:4000]])
+    datasets.append([x[:2000], y[:2000]])
 
     def shared_dataset(data_xy, borrow=True):
         data_x, data_y = data_xy
