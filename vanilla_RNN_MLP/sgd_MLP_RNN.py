@@ -37,23 +37,12 @@ def sgd_MLP(
     x = T.matrix('x', dtype=theano.config.floatX)
     y = T.vector('y', dtype='int64')
 
-    rng = np.random.RandomState(12)
+    rng = np.random.RandomState(13)
     classifier = MLP(rng = rng,
                      input=x,
                      n_in=100,
                      n_hidden=n_hidden,
                      n_out=2)
-
-    if not param_file is None:
-        print '\n...rebuilding the model from the former parameters:' + param_file + '\n'
-        f= open(param_file, 'rb')
-        pre_params = cPickle.load(f)
-        f.close()
-        classifier.hidden_layer.U.set_value(pre_params[0])
-        classifier.hidden_layer.V.set_value(pre_params[1])
-        classifier.hidden_layer.W.set_value(pre_params[2])
-        classifier.output_layer.W.set_value(pre_params[3])
-        classifier.output_layer.b.set_value(pre_params[4])
 
     if not learning_rate is float:
         learning_rate = float(learning_rate)
@@ -80,6 +69,17 @@ def sgd_MLP(
     )
 
 
+    if not param_file is None:
+        print '\n...rebuilding the model from the former parameters:' + param_file + '\n'
+        f= open(param_file, 'rb')
+        pre_params = cPickle.load(f)
+        f.close()
+        classifier.hidden_layer.U.set_value(pre_params[0])
+        classifier.hidden_layer.V.set_value(pre_params[1])
+        classifier.hidden_layer.W.set_value(pre_params[2])
+        classifier.output_layer.W.set_value(pre_params[3])
+        classifier.output_layer.b.set_value(pre_params[4])
+
 
     print "...training model"
 
@@ -103,11 +103,14 @@ def sgd_MLP(
 
         total_cost = 0.
 
+        f = open('data/rnn_train/epoch_' + str(epoch) + '.txt', 'wb')
         for index in xrange(len(train_set_y)):
             this_cost = train_model(train_set_x[index], [train_set_y[index]])
             total_cost += this_cost
+            print >> f, p_y_given_x_model(train_set_x[index])[0], train_set_y[index]
             print "\repoch", epoch, " index:", index," y:", train_set_y[index], " cost:", this_cost,
         print " total loss:", total_cost
+        f.close()
 
         if epoch % valid_freq == 0:
             valid_errors = [valid_model(valid_set_x[i], [valid_set_y[i]]) for i in xrange(len(valid_set_y))]

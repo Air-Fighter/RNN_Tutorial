@@ -1,4 +1,4 @@
-f = open('../data/rnn_test/test_2/output.txt', mode='r')
+f = open('../data/rnn_test/test_5/output.txt', mode='r')
 
 pred = []
 right = []

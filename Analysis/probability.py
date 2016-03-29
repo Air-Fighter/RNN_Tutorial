@@ -1,4 +1,4 @@
-f = open('../data/gru_test/test_1/output.txt', mode='r')
+f = open('../data/gru_test/test_4/output.txt', mode='r')
 
 propabilities = []
 right_one = []

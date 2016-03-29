@@ -78,9 +78,9 @@ def load_data_xy(x_file='data/RNNinput.txt',
     y = np.asarray(y_, dtype='int8')
 
     datasets = []
-    datasets.append([x[4000:], y[4000:]])
-    datasets.append([x[2000:4000], y[2000:4000]])
-    datasets.append([x[:2000], y[:2000]])
+    datasets.append([x[:34686], y[:34686]])
+    datasets.append([x[34686:35886], y[34686:35886]])
+    datasets.append([x[35886:], y[35886:]])
 
     def shared_dataset(data_xy, borrow=True):
         data_x, data_y = data_xy
@@ -95,6 +95,39 @@ def load_data_xy(x_file='data/RNNinput.txt',
 
     return datasets
 
+def load_data_right_wrong(embedding_file='../data/train/dict.txt',
+                          input_file='../data/train/words.txt'):
+    dict = load_embedding_to_dict(embedding_file)
+    f = open(input_file, mode='r')
+
+    right_list = []
+    wrong_list = []
+
+    num = 0
+    for line in f:
+        line = line.strip()
+        sentence_matrix = []
+        sentence_matrix.append([0.] * 100)
+        for word in line.split(" "):
+            if dict.has_key(word):
+                sentence_matrix.append(dict[word])
+            else:
+                sentence_matrix.append([0.] * 100)
+        matrix = np.asarray(sentence_matrix, dtype=theano.config.floatX)
+        if num % 4 == 0:
+            right_list.append(matrix)
+        else:
+            wrong_list.append(matrix)
+        num += 1
+
+    right_list = np.asarray(right_list)
+    wrong_list = np.asarray(wrong_list)
+
+    dataset = []
+    dataset.append([right_list[:5931], wrong_list[:17793]])
+    dataset.append([right_list[5931:], wrong_list[17793:]])
+
+    return dataset
 
 if __name__ == '__main__':
     x_set, y_set = load_data(input_file='data/RNNinput.txt')

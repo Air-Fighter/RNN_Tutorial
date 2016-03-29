@@ -14,12 +14,12 @@ from MLP_GRU import MLP
 
 def build_model_for_predication(
         data_set='data/RNNinput.txt',
-        out_file='data/gru_test/test_1/output.txt',
+        out_file='data/gru_test/test_4/output.txt',
         n_hidden=400):
     print '...loading data'
 
-    x_set = load_data_x('data/gru_test/test_1/words.txt', 'data/gru_test/test_1/dict.txt')
-    y_set = load_data_y('data/gru_test/test_1/labels.txt')
+    x_set = load_data_x('data/gru_test/test_3/words.txt', 'data/gru_test/test_3/dict.txt')
+    y_set = load_data_y('data/gru_test/test_3/labels.txt')
 
     print '...loading parameters'
 
