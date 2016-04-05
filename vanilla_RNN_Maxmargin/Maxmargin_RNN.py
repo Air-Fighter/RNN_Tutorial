@@ -23,7 +23,7 @@ class MaxMargin(object):
             borrow = True
         )
 
-        self.params = [self.W]
+        self.param = [self.W]
 
         self.a = T.dot(self.W, self.hidden_layer.output[0])
         self.b = T.dot(self.W, self.hidden_layer.output[1])
@@ -38,5 +38,5 @@ class MaxMargin(object):
                       + (self.hidden_layer.V ** 2).sum() \
                       + (self.hidden_layer.W ** 2).sum()
 
-        self.params = self.hidden_layer.params + self.params
+        self.params = self.hidden_layer.params + self.param
 

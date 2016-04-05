@@ -23,7 +23,7 @@ def sgd_MLP(
             n_hidden=400):
 
     print '...reading data'
-    dataset = load_data_right_wrong('data/rain/dict.txt', 'data/train/words.txt')
+    dataset = load_data_right_wrong('data/train/dict.txt', 'data/train/words.txt')
 
     train_set_right, train_set_wrong = dataset[0]
     test_set_right, test_set_wrong = dataset[1]
@@ -89,12 +89,19 @@ def sgd_MLP(
 
         total_cost = 0.
 
+        f = open('data/rnn_train/epoch_' + str(epoch) +'.txt', mode='w')
         for index in xrange(len(train_set_right)):
             for i in xrange(3):
                 this_cost = train_model(train_set_right[index], train_set_wrong[3*index + i])
                 total_cost += this_cost
+                print >>f, index, i, this_cost, valid_output_model(train_set_right[index], train_set_wrong[3*index + i])
                 print "\repoch", epoch, " index:", index, " cost:", this_cost,
         print " total loss:", total_cost
+        f.close()
+
+        file = open('data/rnn_params/epoch_' + str(epoch) + '.txt', 'wb')
+        cPickle.dump([param.get_value() for param in maxmargin.params], file)
+        file.close()
 
         if epoch % valid_freq == 0:
             f = open('data/rnn_valid/epoch_' + str(epoch) + '.txt', 'wb')
@@ -110,9 +117,7 @@ def sgd_MLP(
             if this_valid_error < best_valid_error:
                 best_valid_error = this_valid_error
 
-                file = open('data/rnn_params/epoch_' + str(epoch) + '.txt', 'wb')
-                cPickle.dump([param.get_value() for param in maxmargin.params], file)
-                file.close()
+
 
     end_time = time.clock()
     print 'Optimization complete with best validation score of %f %%, with test performance %f %%' %\
