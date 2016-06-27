@@ -3,7 +3,7 @@ from RNN_matrix import RNN_matrix
 
 
 class MLP(object):
-    def __init__(self, rng, input, n_in, n_hidden, n_out):
+    def __init__(self, rng, input, y, n_in, n_hidden, n_out):
         self.hidden_layer = RNN_matrix(
             rng=rng,
             input=input,
@@ -14,6 +14,7 @@ class MLP(object):
         self.output_layer = LogisticRegression(
             rng=rng,
             input=self.hidden_layer.output,
+            y=y,
             n_in=n_in,
             n_out=n_out
         )
@@ -29,6 +30,7 @@ class MLP(object):
                       + (self.output_layer.W ** 2).sum()
 
         self.loss_function = self.output_layer.loss_function
+        self.loss = self.output_layer.loss
         self.errors = self.output_layer.errors
 
         self.params = self.hidden_layer.params + self.output_layer.params

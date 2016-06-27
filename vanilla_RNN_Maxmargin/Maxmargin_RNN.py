@@ -5,7 +5,7 @@ import numpy as np
 from RNN_matrix import RNN_matrix
 
 class MaxMargin(object):
-    def __init__(self, rng, input, word_dim, hidden_dim):
+    def __init__(self, rng, input, word_dim, hidden_dim, margin=0.1):
         self.hidden_layer = RNN_matrix(
             rng=rng,
             input=input,
@@ -15,20 +15,24 @@ class MaxMargin(object):
 
         self.W = theano.shared(
             value=rng.uniform(
-                low=-np.sqrt(1. / (word_dim)),
-                high=np.sqrt(1. / (word_dim)),
+                low=-np.sqrt(1. / 0.08),
+                high=np.sqrt(1. / 0.08),
                 size=(word_dim, )
             ).astype(theano.config.floatX),
             name = 'W',
             borrow = True
         )
 
+        self.margin = margin
+
         self.param = [self.W]
 
         self.a = T.dot(self.W, self.hidden_layer.output[0])
         self.b = T.dot(self.W, self.hidden_layer.output[1])
 
-        self.loss = self.a - self.b
+        self.this_margin = self.a - self.b
+
+        self.loss = T.maximum(0.0, self.margin - self.this_margin)
 
         self.L1 = abs(self.hidden_layer.U).sum() \
                   + abs(self.hidden_layer.V).sum() \

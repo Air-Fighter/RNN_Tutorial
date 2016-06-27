@@ -16,20 +16,18 @@ from MLP_RNN import MLP
 def sgd_MLP(
             param_file=None,
             learning_rate=0.01,
-            L1_reg=0.00,
-            L2_reg=0.0001,
+            valid_freq=5,
             max_epoches=1000,
-            dataset='data/RNNinput.txt',
-            n_hidden=400):
+            n_hidden=1000,
+            n_samples=133914):
 
     print '...reading data'
-    datasets = load_data_xy(x_file='data/train/words.txt', y_file='data/train/labels.txt',
-                            embedding_file='data/train/dict_03171041.txt')
+    datasets = load_data_xy(x_file='data/train/tiku_train/words.txt', y_file='data/train/tiku_train/labels.txt',
+                            embedding_file='data/train/tiku_train/dict.txt', sample_sum=n_samples)
 
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
-    test_set_x, test_set_y = datasets[2]
 
     # build model
     print '...building model'
@@ -58,9 +56,9 @@ def sgd_MLP(
     p_y_given_x_model = theano.function(inputs=[x], outputs=classifier.output_layer.p_y_given_x)
 
     gparams = [T.grad(cost, param) for param in classifier.params]
-
     updates = [(param, param - learning_rate * gparam)
                for param, gparam in zip(classifier.params, gparams)]
+
 
     train_model = theano.function(
         inputs=[x, y],
@@ -81,24 +79,20 @@ def sgd_MLP(
         classifier.output_layer.b.set_value(pre_params[4])
 
 
+    if not valid_freq is int:
+        valid_freq = int(valid_freq)
+
+
     print "...training model"
-
-    patience = 10000
-    patience_increase = 2
-    improvement_threshold = 0.995
-
-    valid_freq = 5
 
     best_params = None
     best_valid_error = np.inf
-    best_iter = 0
     test_score = 0.
     start_time = time.clock()
 
-    done_looping = False
     epoch = 0
 
-    while (epoch < max_epoches) and (not done_looping):
+    while epoch < max_epoches:
         epoch += 1
 
         total_cost = 0.
@@ -125,24 +119,15 @@ def sgd_MLP(
             print '\tepoch', epoch, ' validation error:', this_valid_error * 100.
 
             if this_valid_error < best_valid_error:
-                if this_valid_error < best_valid_error * improvement_threshold :
-                    patience = max(patience, epoch * patience_increase)
-
                 best_valid_error = this_valid_error
-
-                file = open('data/rnn_params/epoch_' + str(epoch) + '.txt', 'wb')
+                best_params = [param.get_value() for param in classifier.params]
+                file = open('data/20000params/rnn_params/best_params.txt', mode='wb')
                 cPickle.dump([param.get_value() for param in classifier.params], file)
                 file.close()
 
-                test_losses = [test_model(test_set_x[i], [test_set_y[i]]) for i in xrange(len(test_set_y))]
-                test_score = np.mean(test_losses)
-
-                print '\tepoch %i, test error of best model %f %%' % \
-                    (epoch,  test_score * 100.)
-
-        if epoch >= patience:
-            done_looping = True
-            break
+            file = open('data/20000params/rnn_params/epoch_' + str(epoch) + '.txt', 'wb')
+            cPickle.dump([param.get_value() for param in classifier.params], file)
+            file.close()
 
     end_time = time.clock()
     print 'Optimization complete with best validation score of %f %%, with test performance %f %%' %\
@@ -156,9 +141,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '-params', help='the path\\filename of an existing parameter file')
     parser.add_argument('-l', '-learning_rate', help='learning rate of training the model')
+    parser.add_argument('-f', '-frequency', help='frequency of validation')
+    parser.add_argument('-n', '-number_of_samples', help='the number of training samples')
     args = parser.parse_args()
 
     if not args:
         sgd_MLP()
     else:
-        sgd_MLP(param_file=args.p, learning_rate=args.l)
+        sgd_MLP(param_file=args.p, learning_rate=args.l, valid_freq=args.f, n_samples=args.n)
