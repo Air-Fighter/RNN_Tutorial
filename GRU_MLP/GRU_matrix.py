@@ -46,7 +46,7 @@ class GRU_matrix:
             o_t = T.nnet.softmax(T.dot(V, s_t))
             return o_t[0], s_t
 
-        [o, _], updates = theano.scan(
+        [o, s], updates = theano.scan(
             fn=one_step,
             sequences=[input],
             outputs_info=[None, dict(initial=T.zeros(hidden_dim), dtype=theano.config.floatX)],
@@ -56,6 +56,7 @@ class GRU_matrix:
         )
 
         self.output_sequence = o
+        self.hidden_sequence = s
         self.output = o[-1]
 
     """

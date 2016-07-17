@@ -23,6 +23,7 @@ def load_data(embedding_file='data/RNN_dict.txt',
     datafile= open(input_file, mode='r')
     x_list = []
     y_list = []
+    word_list = []
 
     for line in datafile:
         line = line[:-1]
@@ -30,30 +31,36 @@ def load_data(embedding_file='data/RNN_dict.txt',
         # sentence_matrix = [dict[word] for word in line.split(" ")]
 
         sentence_matrix = []
+        word_matrix = []
         sentence_matrix.append([0.] * 100)
+        word_matrix.append("<S>")
         for word in line.split(" "):
+            word_matrix.append(word.decode('utf-8'))
+            # word_matrix.append(word)
             if dict.has_key(word):
                 sentence_matrix.append(dict[word])
             else:
                 sentence_matrix.append([0.] * 100)
 
         sentence_matrix.append([0.] * 100)
+        word_matrix.append("<E>")
 
         matrix = np.asarray(sentence_matrix, dtype=theano.config.floatX)
 
         x_list.append(matrix[:-1])
         y_list.append(matrix[1:])
+        word_list.append(word_matrix[:-1])
 
     x_list = np.asarray(x_list)
     y_list = np.asarray(y_list)
 
-    return x_list, y_list
+    return x_list, y_list, word_list
 
 def load_data_x(x_file='data/test_1/RNNwords.txt',
                 embedding_file='data/RNN_dict.txt'):
-    x, x_ = load_data(input_file=x_file, embedding_file=embedding_file)
+    x, x_, w = load_data(input_file=x_file, embedding_file=embedding_file)
 
-    return x
+    return x, w
 
 def load_data_y(y_file='data/RNNlabels.txt'):
     ret_y = []
@@ -67,7 +74,7 @@ def load_data_xy(x_file='data/RNNinput.txt',
               y_file='data/MLPLabels.txt',
               embedding_file='data/RNN_dict.txt',
                  sample_sum=133914):
-    x, x_ = load_data(input_file=x_file, embedding_file=embedding_file)
+    x, x_, _ = load_data(input_file=x_file, embedding_file=embedding_file)
     Y_file = open(y_file, mode='r')
     y_ = []
 
@@ -211,7 +218,54 @@ def load_data_qa(embedding_file='data/qas_test/test01/dict.txt',
 
     return q_list, a_list
 
+def load_data_qas(word_file='data/train/qas_train/words.txt',
+                  dict_file='data/train/qas_train/dict.txt',
+                  label_file='data/train/qas_train/labels.txt',
+                  gap=8):
+    q_list = [] # list of material words
+    l_list = []  # list of lead-in words
+    a_list = [] # list of answer words
+    s_list = [] # list of signal words
+
+    f = open(label_file, mode='r')
+    for line in f:
+        s_list.append(int(line))
+    f.close()
+
+    dict = load_embedding_to_dict(dict_file)
+    f = open(word_file, mode='r')
+    num = 0
+    for line in f:
+        line = line.strip()
+        sentence_matrix = []
+        sentence_matrix.append([0.] * 100)
+        for word in line.split(" "):
+            if dict.has_key(word):
+                sentence_matrix.append(dict[word])
+            else:
+                sentence_matrix.append([0.] * 100)
+        matrix = np.asarray(sentence_matrix, dtype=theano.config.floatX)
+        if num % gap == 0:
+            q_list.append(matrix)
+        elif num % gap == 1:
+            l_list.append(matrix)
+        else:
+            a_list.append(matrix)
+        num += 1
+    f.close()
+
+    q_list = np.asarray(q_list)
+    l_list = np.asarray(l_list)
+    a_list = np.asarray(a_list)
+    s_list = np.asarray(s_list)
+
+    return q_list, l_list, a_list, s_list
+
 if __name__ == '__main__':
-    x, y = load_data_xy(x_file='data/train/words.txt', y_file='data/train/labels.txt',
-                            embedding_file='data/train/dict.txt', sample_sum=34824)
-    print y[0]
+    q,l,a,s = load_data_qas(
+        word_file='data/train/qas_train/valid/words.txt',
+        dict_file='data/train/qas_train/valid/dict.txt',
+        label_file='data/train/qas_train/valid/labels.txt',
+        gap=6
+    )
+    print q.shape, l.shape, a.shape, s.shape

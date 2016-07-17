@@ -31,3 +31,6 @@ class MLP(object):
         self.errors = self.output_layer.errors
 
         self.params = self.hidden_layer.params + self.output_layer.params
+
+        self.gru_out_seq = self.hidden_layer.output_sequence
+        self.gru_hidden_seq = self.hidden_layer.hidden_sequence

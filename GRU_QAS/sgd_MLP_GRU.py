@@ -21,74 +21,84 @@ def sgd_MLP(
             L2_reg=0.0001,
             max_epoches=2000,
             dataset='data/RNNinput.txt',
-            n_hidden=400):
+            n_hidden=1000):
 
     print '...reading data'
-    dataset = load_data_qas(word_file='data/train/words.txt', label_file='data/train/labels.txt',
-                            embedding_file='data/train/dict.txt')
+    path = 'data/train/qas_train/'
 
-    train_set_q, train_set_a, train_set_s = dataset[0]
-    valid_set_q, valid_set_a, valid_set_s = dataset[1]
+    dataset = load_data_qas(
+        word_file=path + 'words.txt',
+        dict_file=path + 'dict.txt',
+        label_file=path + 'labels.txt',
+        gap=8)
+
+    path = 'data/train/qas_train/valid/'
+    validset = load_data_qas(
+        word_file=path + 'words.txt',
+        dict_file=path + 'dict.txt',
+        label_file=path + 'labels.txt',
+        gap=6
+    )
+
+    train_set_q, train_set_l, train_set_a, train_set_s = dataset
+    valid_set_q, valid_set_l, valid_set_a, valid_set_s = validset
 
 
     # build model
     print '...building model'
 
     q = T.matrix('q', dtype=theano.config.floatX)
+    l = T.matrix('l', dtype=theano.config.floatX)
     a = T.matrix('a', dtype=theano.config.floatX)
-    s = T.scalar('s', dtype='int64')
+    a_ = T.matrix('a_', dtype=theano.config.floatX)
 
     rng = np.random.RandomState(13)
-    classifier = MLP_QAS(rng = rng,
-                     question=q,
-                     answer=a,
-                     signal=s,
-                     n_in=100,
-                     n_hidden=n_hidden)
+    gru = MLP_QAS(rng = rng,
+                  question=q,
+                  lead_in=l,
+                  answer=a,
+                  wanswer=a_,
+                  n_in=100,
+                  n_hidden=n_hidden)
 
     if not learning_rate is float:
         learning_rate = float(learning_rate)
 
-    cost = classifier.loss_function # + L1_reg * classifier.L1 + L2_reg * classifier.L2_sqr
+    cost = gru.loss_function
 
-    gparams = [T.grad(cost, param) for param in classifier.params]
+    gparams = [T.grad(cost, param) for param in gru.params]
 
     updates = [(param, param - learning_rate * gparam)
-               for param, gparam in zip(classifier.params, gparams)]
+               for param, gparam in zip(gru.params, gparams)]
 
     train_model = theano.function(
-        inputs=[q, a, s],
+        inputs=[q, l, a, a_],
         outputs=cost,
         updates=updates
     )
 
     pred_model = theano.function(
-        inputs=[q, a],
-        outputs=[classifier.q, classifier.a]
+        inputs=[q, l, a],
+        outputs=gru.L2
     )
 
-    L2_model = theano.function(
-        inputs=[q, a],
-        outputs=classifier.L2
-    )
 
     if not param_file is None:
         print '\n...rebuilding the model from the former parameters:' + param_file + '\n'
         f= open(param_file, 'rb')
         pre_params = cPickle.load(f)
         f.close()
-        classifier.question_layer.U.set_value(pre_params[0])
-        classifier.question_layer.V.set_value(pre_params[1])
-        classifier.question_layer.W.set_value(pre_params[2])
-        classifier.answer_layer.U.set_value(pre_params[0])
-        classifier.answer_layer.V.set_value(pre_params[1])
-        classifier.answer_layer.W.set_value(pre_params[2])
+        gru.question_layer.U.set_value(pre_params[0])
+        gru.question_layer.V.set_value(pre_params[1])
+        gru.question_layer.W.set_value(pre_params[2])
+        gru.lead_in_layer.U.set_value(pre_params[3])
+        gru.lead_in_layer.V.set_value(pre_params[4])
+        gru.lead_in_layer.W.set_value(pre_params[5])
+        gru.answer_layer.U.set_value(pre_params[6])
+        gru.answer_layer.V.set_value(pre_params[7])
+        gru.answer_layer.W.set_value(pre_params[8])
 
     print "...training model"
-
-    patience = 10000
-    patience_increase = 2
-    improvement_threshold = 0.995
 
     best_params = None
     best_valid_error = np.inf
@@ -104,53 +114,54 @@ def sgd_MLP(
 
         total_cost = 0.
 
-        f = open('data/gru_train/epoch_' + str(epoch) + '.txt', 'wb')
+        # f = open('data/gru_train/epoch_' + str(epoch) + '.txt', 'wb')
         for index in xrange(len(train_set_q)):
-            print >> f, "index:", index
-            for i in xrange(6):
-                this_cost = train_model(train_set_q[index], train_set_a[6 *index + i], train_set_s[6 * index + i])
-                total_cost -= train_set_s[6 * index + i] * this_cost
-                print "\repoch", epoch, " index:", index," label:", train_set_s[6 * index + i], " cost:", this_cost,
-                print >> f, "\ti:", i, "s:", train_set_s[6 * index + i], " cost:", this_cost
+            # print >> f, "index:", index
+            for i in xrange(3):
+                this_cost = train_model(train_set_q[index], train_set_l[index],
+                                        train_set_a[6 * index + 2 * i + 1], train_set_a[6*index + 2*i])
+                total_cost += this_cost
+                print "\repoch", epoch, " index:", index," i:", i, " cost:", this_cost,
+                # print >> f, "\ti:", i, "s:", train_set_s[6 * index + i], " cost:", this_cost
 
         print " total loss:", total_cost
-        f.close()
+        # f.close()
 
 
         if epoch % valid_freq == 0:
 
-            f = open('data/gru_valid/epoch_' + str(epoch) + '.txt', 'w')
+            # f = open('data/gru_valid/epoch_' + str(epoch) + '.txt', 'w')
             this_valid_error = 0
             for index in xrange(len(valid_set_q)):
-                print >> f, "index:", index
+                # print >> f, "index:", index
                 min_L2 = np.inf
                 min_i = -1
                 for i in xrange(4):
-                    q_pred, a_pred = pred_model(valid_set_q[index], valid_set_a[index * 6 + i])
-                    l2 = L2_model(valid_set_q[index], valid_set_a[index * 6 + i])
+                    l2 = pred_model(valid_set_q[index], valid_set_a[index * 6 + i])
                     if l2 < min_L2:
                         min_L2 = l2
                         min_i = i
+                    """
                     if i == 0:
                         print >> f, "q_pred:", q_pred
                         print >> f, "a_pred:", a_pred
                     else:
                         print >> f, "a_pred:", a_pred
+                    """
 
-                if min_i < 4 and min_i >= 0 and valid_set_s[index * 6 + min_i] == 1:
+                if min_i < 4 and min_i >= 0 and valid_set_s[index * 4 + min_i] == 1:
                     this_valid_error += 0
                 else:
                     this_valid_error += 1
-            f.close()
+            # f.close()
 
             print '\tepoch:', epoch, ' validation error:', this_valid_error, "/", len(train_set_q)
 
             if this_valid_error < best_valid_error:
                 best_valid_error = this_valid_error
-
-                file = open('data/gru_params/epoch_' + str(epoch) + '.txt', 'wb')
-                cPickle.dump([param.get_value() for param in classifier.params], file)
-                file.close()
+            file = open('data/qas_params/gru_params/epoch_' + str(epoch) + '.txt', 'wb')
+            cPickle.dump([param.get_value() for param in gru.params], file)
+            file.close()
 
 
     end_time = time.clock()

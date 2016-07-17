@@ -36,8 +36,14 @@ class GRU_matrix:
             name='W'
         )
 
+        self.hidden_dim = hidden_dim
+        self.bptt_truncate = bptt_truncate
+
         self.params = [self.U, self.V, self.W]
 
+        self.output = self.compute_answer(input)[-1]
+
+    def compute_answer(self, input):
         def one_step(x_t, s_t_prev, U, V, W):
             z = T.nnet.hard_sigmoid(T.dot(U[0], x_t) + T.dot(s_t_prev, W[0]))
             r = T.nnet.hard_sigmoid(T.dot(U[1], x_t) + T.dot(s_t_prev, W[1]))
@@ -49,14 +55,12 @@ class GRU_matrix:
         [o, _], updates = theano.scan(
             fn=one_step,
             sequences=[input],
-            outputs_info=[None, dict(initial=T.zeros(hidden_dim), dtype=theano.config.floatX)],
+            outputs_info=[None, dict(initial=T.zeros(self.hidden_dim), dtype=theano.config.floatX)],
             non_sequences=[self.U, self.V, self.W],
-            truncate_gradient=bptt_truncate,
+            truncate_gradient=self.bptt_truncate,
             strict=True
         )
-
-        self.output_sequence = o
-        self.output = o[-1]
+        return  o
 
     """
     def loss_function(self, Y):
